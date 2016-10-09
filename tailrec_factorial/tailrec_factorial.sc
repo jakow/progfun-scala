@@ -5,4 +5,4 @@ def factorial(x: Int): Int = {
   loop(x, 1)
 }
 
-factorial(-1)
+factorial(4)
