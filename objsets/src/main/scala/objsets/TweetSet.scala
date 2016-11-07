@@ -60,12 +60,12 @@ abstract class TweetSet {
    * Calling `mostRetweeted` on an empty set should throw an exception of
    * type `java.util.NoSuchElementException`.
    *
-   * Question: Should we implment this method here, or should it remain abstract
+   * Question: Should we implement this method here, or should it remain abstract
    * and be implemented in the subclasses?
    */
     def mostRetweeted: Tweet
 
-  def mostRetweetedIter(largest: Tweet): Tweet
+    def mostRetweetedIter(largest: Tweet): Tweet
   /**
    * Returns a list containing all tweets of this set, sorted by retweet count
    * in descending order. In other words, the head of the resulting list should
@@ -76,10 +76,6 @@ abstract class TweetSet {
    * and be implemented in the subclasses?
    */
     def descendingByRetweet: TweetList
-  
-  /**
-   * The following methods are already implemented
-   */
 
   /**
    * Returns a new `TweetSet` which contains all elements of this set, and the
@@ -89,9 +85,6 @@ abstract class TweetSet {
    */
   def incl(tweet: Tweet): TweetSet
 
-  /**
-   * Returns a new `TweetSet` which excludes `tweet`.
-   */
   def remove(tweet: Tweet): TweetSet
 
   /**
@@ -107,9 +100,17 @@ abstract class TweetSet {
 
 class Empty extends TweetSet {
   // reaching empty means that we have reached the end of a branch of a tree
-    def filterAcc(p: Tweet => Boolean, acc: TweetSet): TweetSet = acc
+  def filterAcc(p: Tweet => Boolean, acc: TweetSet): TweetSet = acc
 
-    def filter(p: Tweet => Boolean) = new Empty // filtering empty set yields empty
+  def filter(p: Tweet => Boolean) = new Empty // filtering empty set yields empty
+
+  def union(other: TweetSet): TweetSet = other
+
+  def mostRetweeted: Nothing = throw new NoSuchElementException("Empty.mostRetweeted")
+
+  def mostRetweetedIter(largest: Tweet): Tweet = largest
+
+  def descendingByRetweet: TweetList = Nil
   /**
    * The following methods are already implemented
    */
@@ -122,13 +123,9 @@ class Empty extends TweetSet {
 
   def foreach(f: Tweet => Unit): Unit = ()
 
-  def union(other: TweetSet): TweetSet = other
 
-  def mostRetweeted: Nothing = throw new NoSuchElementException("Empty.mostRetweeted")
 
-  def mostRetweetedIter(largest: Tweet): Tweet = largest
 
-  def descendingByRetweet: TweetList =  Nil
 
 }
 
@@ -154,16 +151,9 @@ class NonEmpty(elem: Tweet, left: TweetSet, right: TweetSet) extends TweetSet {
     val largestRight = right.mostRetweetedIter(newLargest)
     if (largestLeft.retweets > largestRight.retweets) largestLeft else largestRight
 
-
   }
 
-  def descendingByRetweet: TweetList = ???
-
-  def ascendingByRetweetLoop(set: TweetSet, list: TweetList): {
-    ascendingByRetweetLoop(set.remove(set.mostRetweeted) new Cons(set.mostRetweeted)
-
-  }
-
+  def descendingByRetweet: TweetList = new Cons(mostRetweeted, remove(mostRetweeted).descendingByRetweet)
     
   /**
    * The following methods are already implemented
@@ -218,15 +208,17 @@ class Cons(val head: Tweet, val tail: TweetList) extends TweetList {
 object GoogleVsApple {
   val google = List("android", "Android", "galaxy", "Galaxy", "nexus", "Nexus")
   val apple = List("ios", "iOS", "iphone", "iPhone", "ipad", "iPad")
-
-    lazy val googleTweets: TweetSet = ???
-  lazy val appleTweets: TweetSet = ???
+//  def containsAny(str: String, list: List[String]): Boolean =
+//    list.foldLeft(false)((acc: Boolean, currStr: String) => acc || (str contains currStr))
+  lazy val googleTweets: TweetSet =
+    TweetReader.allTweets.filter(t => google.exists(keyword => t.text contains keyword))
+  lazy val appleTweets: TweetSet = TweetReader.allTweets.filter(t => apple.exists(keyword => t.text contains keyword))
   
-  /**
+  /** 
    * A list of all tweets mentioning a keyword from either apple or google,
    * sorted by the number of retweets.
    */
-     lazy val trending: TweetList = ???
+     lazy val trending: TweetList = (googleTweets union appleTweets).descendingByRetweet
   }
 
 object Main extends App {
